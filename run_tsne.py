@@ -17,7 +17,7 @@ def _run_tsne(X, perp, i):
     print('[i={}] perp={}'.format(i, perp))
     tsne = TSNE(perplexity=perp, random_state=0, verbose=0)
     tsne.fit_transform(X)
-    out_name = '{}/{}/{}.z'.format(out_dir, dataset_name, i)
+    out_name = '{}/{}/{:04d}.z'.format(out_dir, dataset_name, i)
     dump(tsne, out_name)
 
 def run_embedding(dataset_name):
@@ -32,6 +32,6 @@ def run_embedding(dataset_name):
 
 
 if __name__ == '__main__':
-    dataset_name = 'MNIST-SMALL'
+    dataset_name = 'COIL20'
     run_embedding(dataset_name)
 
