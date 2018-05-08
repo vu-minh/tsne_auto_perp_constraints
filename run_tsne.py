@@ -23,7 +23,8 @@ def _run_tsne(X, perp, i):
 def run_embedding(dataset_name):
     X, y, _ = load_dataset(dataset_name)
     N = X.shape[0]
-    perps = gen_log_space_float(limit=N, n=N//2)
+    n_perps = min(1000, N//2)
+    perps = gen_log_space_float(limit=N, n=n_perps)
     print('Number of perps: ', len(perps))
     
     Parallel(n_jobs=n_cpus_using)(
@@ -32,6 +33,6 @@ def run_embedding(dataset_name):
 
 
 if __name__ == '__main__':
-    dataset_name = 'COIL20'
+    dataset_name = 'MNIST'
     run_embedding(dataset_name)
 
