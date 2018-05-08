@@ -32,10 +32,11 @@ class SafeHDFStore(HDFStore):
                 raise ValueError("The first parameter should be database name")
 
             self._db_name = args[0]
-            probe_interval = kwargs.pop("probe_interval", 0.1)
+            probe_interval = kwargs.pop("probe_interval", 0.5)
             self._lock = "%s.lock" % args[0]
             while True:
                 try:
+                    # print('[{}] Waiting for lock ...'.format(self._db_name))
                     self._flock = os.open(self._lock,
                                           os.O_CREAT |
                                           os.O_EXCL |
@@ -97,6 +98,7 @@ def append_to_db(db_name, key, records):
 
         # append new dataframe into database
         store.append(key, df)
+        # print('[{}]Append to DB with key={} succesfully!'.format(db_name, key))
 
 
 def reset_key(db_name, key):
