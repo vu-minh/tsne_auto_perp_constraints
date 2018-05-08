@@ -141,7 +141,7 @@ def calculate_constraint_score(dataset_name):
     Parallel(n_jobs=n_cpus_using)(
         delayed(_calculate_constraint_score)(
             db_name, labels, tsne_file
-        ) for tsne_file in to_process_files[:10]
+        ) for tsne_file in to_process_files
     )
 
 
