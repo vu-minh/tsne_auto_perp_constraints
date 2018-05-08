@@ -22,32 +22,36 @@ from pandas import HDFStore
 import os
 import time
 
+IS_PARALLEL = True
+
 
 class SafeHDFStore(HDFStore):
     def __init__(self, *args, **kwargs):
-        if len(args) < 1 or len(args[0]) == 0:
-            raise ValueError("The first parameter should be database name")
+        if IS_PARALLEL:
+            if len(args) < 1 or len(args[0]) == 0:
+                raise ValueError("The first parameter should be database name")
 
-        self._db_name = args[0]
-        probe_interval = kwargs.pop("probe_interval", 1)
-        self._lock = "%s.lock" % args[0]
-        while True:
-            try:
-                print('wait')
-                self._flock = os.open(self._lock,
-                                      os.O_CREAT |
-                                      os.O_EXCL |
-                                      os.O_WRONLY)
-                break
-            except FileExistsError:
-                time.sleep(probe_interval)
+            self._db_name = args[0]
+            probe_interval = kwargs.pop("probe_interval", 0.1)
+            self._lock = "%s.lock" % args[0]
+            while True:
+                try:
+                    self._flock = os.open(self._lock,
+                                          os.O_CREAT |
+                                          os.O_EXCL |
+                                          os.O_WRONLY)
+                    break
+                except FileExistsError:
+                    time.sleep(probe_interval)
 
         HDFStore.__init__(self, *args, **kwargs)
 
     def __exit__(self, *args, **kwargs):
         HDFStore.__exit__(self, *args, **kwargs)
-        os.close(self._flock)
-        os.remove(self._lock)
+
+        if IS_PARALLEL:
+            os.close(self._flock)
+            os.remove(self._lock)
 
 
 DB_PATH = './db_files'
