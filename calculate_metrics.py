@@ -8,8 +8,6 @@ from metrics import DRMetric
 from dataset_utils import load_dataset
 import db_utils
 
-# if run code in sequential model
-db_utils.IS_PARALLEL = False
 
 input_folder = './input'
 output_folder = './output'
@@ -79,7 +77,10 @@ def calculate_metric(dataset_name):
 
 
 if __name__ == '__main__':
-    dataset_name = 'MNIST-SMALL'
+    # if run code in sequential model, disable parallel flag
+    db_utils.IS_PARALLEL = True
+
+    dataset_name = 'COIL20'
     db_name = 'DB_{}'.format(dataset_name)
 
     calculate_metric(dataset_name)
