@@ -160,7 +160,7 @@ def test_reproduce_seed():
 if __name__ == '__main__':
     db_utils.IS_PARALLEL = True
 
-    datasets = ['COUNTRY2014', 'BREAST-CANCER95', 'MPI', 'DIABESTS']
+    datasets = ['COUNTRY2014', 'BREAST-CANCER95', 'MPI', 'DIABETES']
     for dataset_name in datasets:
         print('Calculate Constraint scores for ', dataset_name)
         calculate_constraint_score(dataset_name)

@@ -34,7 +34,7 @@ def run_embedding(dataset_name):
 
 
 if __name__ == '__main__':
-    datasets = ['COUNTRY2014', 'BREAST-CANCER95', 'MPI', 'DIABESTS']
+    datasets = ['COUNTRY2014', 'BREAST-CANCER95', 'MPI', 'DIABETES']
     for dataset_name in datasets:
         print('Calculate embeddings for ', dataset_name)
         run_embedding(dataset_name)
