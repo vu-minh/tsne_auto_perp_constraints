@@ -86,7 +86,7 @@ if __name__ == '__main__':
     # if run code in sequential model, disable parallel flag
     db_utils.IS_PARALLEL = True
 
-    datasets = ['COUNTRY2014', 'BREAST-CANCER95', 'MPI', 'DIABETES']
+    datasets = ['COUNTRY-2014', 'BREAST-CANCER95', 'MPI', 'DIABETES']
     for dataset_name in datasets:
         print('Calculate Metric scores for ', dataset_name)
         calculate_metric(dataset_name)
