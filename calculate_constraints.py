@@ -162,6 +162,7 @@ if __name__ == '__main__':
 
     datasets = ['COUNTRY2014', 'BREAST-CANCER95', 'MPI', 'DIABESTS']
     for dataset_name in datasets:
+        print('Calculate Constraint scores for ', dataset_name)
         calculate_constraint_score(dataset_name)
 
     # dataset_name = 'MNIST-SMALL'
