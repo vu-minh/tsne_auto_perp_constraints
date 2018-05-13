@@ -1,14 +1,12 @@
 # calculate constraint-preserving scores
 
 import os
-import json
 import random
 import numpy as np
 
 from joblib import Parallel, delayed, load
 from scipy.spatial.distance import pdist, squareform
 
-from metrics import DRMetric
 from dataset_utils import load_dataset
 import db_utils
 
@@ -146,7 +144,7 @@ def calculate_constraint_score(dataset_name):
 
 
 def test_reproduce_seed():
-    # just run this function several times and see if it gives the same results.
+    # run this function several times and see if it gives the same results.
     dataset_name = 'MNIST-SMALL'
     _, labels, _ = load_dataset(dataset_name)
 
@@ -162,8 +160,10 @@ def test_reproduce_seed():
 if __name__ == '__main__':
     db_utils.IS_PARALLEL = True
 
-    dataset_name = 'MNIST-SMALL'
-    db_name = 'DB_{}'.format(dataset_name)
+    datasets = ['COUNTRY2014', 'BREAST-CANCER95', 'MPI', 'DIABESTS']
+    for dataset_name in datasets:
+        calculate_constraint_score(dataset_name)
 
-    calculate_constraint_score(dataset_name)
+    # dataset_name = 'MNIST-SMALL'
+    # db_name = 'DB_{}'.format(dataset_name)
     # db_utils.show_db(db_name, key='constraints')

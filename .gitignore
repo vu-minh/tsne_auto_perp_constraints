@@ -1,0 +1,6 @@
+__pycache__/
+db_files/
+db_utils.pyc
+output/
+.ipynb_checkpoints/
+plots/.ipynb_checkpoints/

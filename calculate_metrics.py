@@ -86,11 +86,13 @@ if __name__ == '__main__':
     # if run code in sequential model, disable parallel flag
     db_utils.IS_PARALLEL = True
 
-    dataset_name = 'MNIST-SMALL'
-    db_name = 'DB_{}'.format(dataset_name)
+    datasets = ['COUNTRY2014', 'BREAST-CANCER95', 'MPI', 'DIABESTS']
+    for dataset_name in datasets:
+        calculate_metric(dataset_name)
 
-    calculate_metric(dataset_name)
-    db_utils.show_db(db_name, key='metrics')
+    # dataset_name = 'MNIST-SMALL'
+    # db_name = 'DB_{}'.format(dataset_name)
+    # db_utils.show_db(db_name, key='metrics')
 
     # # clean all data in key
     # db_utils.reset_key(db_name, key='metrics')
