@@ -95,10 +95,10 @@ app.layout = html.Div([
         html.Div([
             html.Div(id='dataset-info', children='Dataset Info'),
         ], className='col')
-    ], className='row'),
+    ], className='row mt-3'),
 
     # showing images or scatter plot
-    html.Div(id='img-container', children=[], className='row'),
+    html.Div(id='img-container', children=[], className='row mt-4'),
 
     html.Div(id='radar-container', children=[
         dcc.Graph(
@@ -107,7 +107,7 @@ app.layout = html.Div([
                 'displayModeBar': False
             }
         ),
-    ], className='row'),
+    ], className='row mt-4'),
 
     # control buttons
     html.Div([
@@ -121,13 +121,13 @@ app.layout = html.Div([
                     className="btn btn-outline-success mx-auto"),
         html.Button('Reset', id='btn-reset',
                     className="btn btn-outline-danger mx-auto"),
-    ], className='row'),
+    ], className='row  mt-3'),
 
     # list of selected constraints
     html.Div([
         html.Div([html.Div(id='tbl-mustlinks')], className='col'),
         html.Div([html.Div(id='tbl-cannotlinks')], className='col')
-    ], className='row'),
+    ], className='row mt-3'),
 
 ], className='container')
 
@@ -169,7 +169,7 @@ def update_dataset(name):
     dataset_name = name
     dataX, target_labels, target_names = load_dataset(dataset_name)
     dists = squareform(pdist(dataX))
-    return str(dataX.shape)
+    return 'N = {} instances, D = {} features'.format(*dataX.shape)
 
 
 def _rand_pair(n_max):
@@ -260,11 +260,12 @@ def show_pair_in_radar(n_clicks):
             ),
             angularaxis=dict(
                 visible=True,
-                showticklabels=True
+                showticklabels=False,
+                ticks=''
             )
         ),
         showlegend=True,
-        legend=dict(orientation="h")
+        legend=dict(orientation="h", xanchor="center", x=0.5)
     )
 
     return {'data': data, 'layout': layout}
