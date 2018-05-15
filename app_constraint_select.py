@@ -7,8 +7,6 @@ from scipy.spatial.distance import cosine, pdist, squareform
 from dataset_utils import load_dataset
 
 import random
-import time
-import pickle
 
 
 epsilon = 1e-5
@@ -63,7 +61,7 @@ datasets = {
     "Country Indicators 2013": "COUNTRY-2013",
     "Country Indicators 2014": "COUNTRY-2014",
     "Country Indicators 2015": "COUNTRY-2015",
-    "Cars and Trucks 2004": "CARS04",
+    # "Cars and Trucks 2004": "CARS04",
     "Breast Cancer Wisconsin (Diagnostic)": "BREAST-CANCER95",
     "Pima Indians Diabetes": "DIABETES",
     "Multidimensional Poverty Measures": "MPI"
@@ -75,41 +73,56 @@ is_showing_image = False
 
 # should start a separate static server for serving images:
 # python -m http.server
-img_host = 'http://0.0.0.0:8000'
+static_host = 'http://0.0.0.0:8000'
 
 app = dash.Dash()
-app.layout = html.Div([
-    dcc.Dropdown(
-        id='datasetX',
-        options=[{'label': k, 'value': v} for k, v in datasets.items()],
-        value=''
-    ),
-    html.Div(id='dataset-info', children='Dataset Info'),
-    html.Div(id='ml-info', children='0 mustlink'),
-    html.Div(id='cl-info', children='0 cannotlink'),
-    html.Div(id='support-info', children='No output file'),
 
-    html.Div(id='img-container', children=[
-        html.Div(id='img-left', children='IMG LEFT'),
-        html.Div(id='img-right', children='IMG RIGHT'),
-    ], style={'columnCount': 2}, hidden=True),
+app.css.append_css({
+    "external_url": '{}/bootstrap.min.css'.format(static_host)
+})
+
+app.layout = html.Div([
+    # dataset selection and debug info
+    html.Div([
+        html.Div([
+            dcc.Dropdown(
+                id='datasetX',
+                options=[{'label': k, 'value': v}
+                         for k, v in datasets.items()],
+                value=''
+            ),
+        ], className='col'),
+        html.Div([
+            html.Div(id='dataset-info', children='Dataset Info'),
+        ], className='col')
+    ], className='row'),
+
+    # showing images or scatter plot
+    html.Div(id='img-container', children=[], className='row'),
 
     html.Div(id='radar-container', children=[
         dcc.Graph(
             id='scatterX'
         ),
-    ], hidden=True),
+    ], className='row'),
 
-    html.Button('Mustlink', id='btn-mustlink'),
-    html.Button('CannotLink', id='btn-cannotlink'),
-    html.Button('Next', id='btn-next'),
-    html.Button('Done', id='btn-done'),
-])
+    # control buttons
+    html.Div([
+        html.Button('Mustlink', id='btn-mustlink'),
+        html.Button('CannotLink', id='btn-cannotlink'),
+        html.Button('Next', id='btn-next'),
+        html.Button('Done', id='btn-done'),
+        html.Button('Reset', id='btn-reset'),
+    ], className='row mx-auto'),
 
+    # list of selected constraints
+    html.Div([
+        html.Div([html.Div(id='tbl-mustlinks')], className='col'),
+        html.Div([html.Div(id='tbl-cannotlinks')], className='col')
+    ], className='row'),
 
-# ['children', 'id', 'n_clicks', 'key', 'accessKey', 'className',
-#  'contentEditable', 'contextMenu', 'dir', 'draggable', 'hidden',
-#  o'lang', 'spellCheck', 'style', 'tabIndex', 'title']
+], className='container')
+
 
 @app.callback(dash.dependencies.Output('img-container', 'hidden'),
               [dash.dependencies.Input('datasetX', 'value')])
@@ -137,6 +150,8 @@ def update_dataset(name):
     if not name:
         return 'Please select a dataset!'
 
+    _reset()
+
     global dataset_name
     global dataX
     global target_labels
@@ -145,18 +160,15 @@ def update_dataset(name):
 
     dataset_name = name
     dataX, target_labels, target_names = load_dataset(dataset_name)
-    # debug the number of classes
-    print('Number of class: ', len(np.unique(target_labels)))
-    # print(set(target_names))
 
     dists = squareform(pdist(dataX))
-    dataset_info = """
-        dataX: shape={}, mean={:.3f}, std={:.3f},
-        min={:.3f}, max={:.3f},
-        min_dist={:.3f}, max_dist={:.3f}
-    """.format(dataX.shape, np.mean(dataX), np.std(dataX),
-               np.min(dataX), np.max(dataX), np.min(dists), np.max(dists))
-    return dataset_info
+    # dataset_info = """
+    #     dataX: shape={}, mean={:.3f}, std={:.3f},
+    #     min={:.3f}, max={:.3f},
+    #     min_dist={:.3f}, max_dist={:.3f}
+    # """.format(dataX.shape, np.mean(dataX), np.std(dataX),
+    #            np.min(dataX), np.max(dataX), np.min(dists), np.max(dists))
+    return str(dataX.shape)
 
 
 def _rand_pair(n_max):
@@ -171,26 +183,29 @@ def _rand_pair(n_max):
               [dash.dependencies.Input('btn-next', 'n_clicks')])
 def show_pair_images(n_clicks):
     if dataX is None or target_names is None or not is_showing_image:
-        return
+        return []
 
     n = dataX.shape[0]
     i1, i2 = _rand_pair(n)
     current_pair['id1'] = i1
     current_pair['id2'] = i2
 
-    img_path = '{}/{}.svg'.format(img_host, dataset_name)
-    res = [
-        html.Img(id='img-left', src='{}#{}'.format(img_path, i1), width=100),
-        html.Img(id='img-right', src='{}#{}'.format(img_path, i2), width=100),
+    img_path = '{}/{}.svg'.format(static_host, dataset_name)
+    return [
+        html.Div([
+            html.Img(src='{}#{}'.format(img_path, i1), height=100),
+        ], className='col'),
+        html.Div([
+            html.Img(src='{}#{}'.format(img_path, i2), height=100),
+        ], className='col')
     ]
-    return res
 
 
 @app.callback(dash.dependencies.Output('scatterX', 'figure'),
               [dash.dependencies.Input('btn-next', 'n_clicks')])
 def show_pair_in_radar(n_clicks):
     if dataX is None or target_names is None or is_showing_image:
-        return
+        return {'data': []}
 
     n = dataX.shape[0]
     i1, i2 = _rand_pair(n)
@@ -257,49 +272,71 @@ def show_pair_in_radar(n_clicks):
 
 
 @app.callback(
-    dash.dependencies.Output('ml-info', 'children'),
+    dash.dependencies.Output('tbl-mustlinks', 'children'),
     [dash.dependencies.Input('btn-mustlink', 'n_clicks')])
 def select_ml(n_clicks):
     global mustlinks
     id1, id2 = current_pair['id1'], current_pair['id2']
     if id1 != -1 and id2 != -1:
         mustlinks.append([id1, id2])
-        # assert len(mustlinks) == n_clicks
-        return '{} mustlinks'.format(n_clicks)
+        return _gen_img_table(mustlinks)
+    else:
+        return html.Table()
 
 
 @app.callback(
-    dash.dependencies.Output('cl-info', 'children'),
+    dash.dependencies.Output('tbl-cannotlinks', 'children'),
     [dash.dependencies.Input('btn-cannotlink', 'n_clicks')])
 def select_cl(n_clicks):
     global cannotlinks
     id1, id2 = current_pair['id1'], current_pair['id2']
     if id1 != -1 and id2 != -1:
         cannotlinks.append([id1, id2])
-        # assert len(cannotlinks) == n_clicks
-        return '{} cannotlinks'.format(n_clicks)
+        return _gen_img_table(cannotlinks)
+    else:
+        return html.Table()
+
+
+# @app.callback(
+#     dash.dependencies.Output('support-info', 'children'),
+#     [dash.dependencies.Input('btn-done', 'n_clicks')])
+# def save_links(_):
+#     if not dataset_name:
+#         return
+
+#     if mustlinks or cannotlinks:
+#         out_name = './output/manual_constraints/{}_{}.pkl'.format(
+#             dataset_name, time.strftime("%Y%m%d_%H%M%S"))
+#         data = {'mustlinks': mustlinks, 'cannotlinks': cannotlinks}
+#         pickle.dump(data, open(out_name, 'wb'))
+
+#         _reset()
+
+#         # Debug
+#         pkl_data = pickle.load(open(out_name, 'rb'))
+#         print(pkl_data)
+
+#         return "Write constraints to {}".format(out_name)
 
 
 @app.callback(
-    dash.dependencies.Output('support-info', 'children'),
-    [dash.dependencies.Input('btn-done', 'n_clicks')])
-def save_links(_):
-    if not dataset_name:
-        return
+    dash.dependencies.Output('datasetX', 'value'),
+    [dash.dependencies.Input('btn-reset', 'n_clicks')])
+def reset(n_clicks):
+    _reset()
+    return ''
 
-    if mustlinks or cannotlinks:
-        out_name = './output/manual_constraints/{}_{}.pkl'.format(
-            dataset_name, time.strftime("%Y%m%d_%H%M%S"))
-        data = {'mustlinks': mustlinks, 'cannotlinks': cannotlinks}
-        pickle.dump(data, open(out_name, 'wb'))
 
-        _reset()
+def _gen_img_table(links):
+    tbl = html.Table(
+        # Header
+        [html.Tr([html.Th('Example 1'), html.Th('Example 2')])] +
+        # Body
+        [html.Tr([html.Td(i1), html.Td(i2)]) for i1, i2 in links],
 
-        # Debug
-        pkl_data = pickle.load(open(out_name, 'rb'))
-        print(pkl_data)
-
-        return "Write constraints to {}".format(out_name)
+        className="table"
+    )
+    return tbl
 
 
 if __name__ == '__main__':
