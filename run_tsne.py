@@ -24,7 +24,7 @@ def _run_tsne(X, perp, i):
 def run_embedding(dataset_name):
     X, y, _ = load_dataset(dataset_name)
     N = X.shape[0]
-    n_perps = min(1000, N // 2)
+    n_perps = max(500, min(1000, N // 2))
     perps = gen_log_space_float(limit=N, n=n_perps)
     print('Number of perps: ', len(perps))
 
