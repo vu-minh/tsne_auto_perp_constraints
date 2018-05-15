@@ -8,6 +8,7 @@ from dataset_utils import load_dataset
 import random
 import time
 import pickle
+import numpy as np
 
 epsilon = 1e-5
 
@@ -101,7 +102,10 @@ app.layout = html.Div([
 
     html.Div(id='radar-container', children=[
         dcc.Graph(
-            id='scatterX'
+            id='scatterX',
+            config={
+                'displayModeBar': False
+            }
         ),
     ], className='row'),
 
@@ -330,12 +334,12 @@ def _gen_img_table(links, is_mustlink):
     img_path = '{}/{}.svg'.format(static_host, dataset_name)
     return html.Table(
         # Header
-        [html.Tr([html.Th('Example 1'), html.Th('Example 2')])] +
+        [html.Tr([html.Th('Image 1'), html.Th('Image 2')])] +
         # Body
         [html.Tr([
             html.Td(html.Img(src='{}#{}'.format(img_path, i1), height=32)),
             html.Td(html.Img(src='{}#{}'.format(img_path, i2), height=32)),
-        ]) for i1, i2 in links],
+        ]) for i1, i2 in links[::-1]],
         # bootstrap css
         style={'color': '#007bff' if is_mustlink else '#545b62'},
         className="table table-sm"
@@ -346,16 +350,38 @@ def _gen_chart_table(links, is_mustlink):
     if len(links) == 0:
         return html.Table()
 
-    return html.Table(
-        [html.Tr([html.Th('Example 1'), html.Th(), html.Th('Example 2')])] +
-        [html.Tr([
-            html.Td(i1),
-            html.Td('chart'),
-            html.Td(i2),
-        ]) for i1, i2 in links],
-        style={'color': '#007bff' if is_mustlink else '#545b62'},
-        className="table"
+    text_color = '#007bff' if is_mustlink else '#545b62'
+    layout = go.Layout(
+        height=90,
+        xaxis=dict(
+            autorange=True, showgrid=False, zeroline=False, showline=False,
+            autotick=True, ticks='', showticklabels=False
+        ),
+        yaxis=dict(
+            autorange=True, showgrid=False, zeroline=False, showline=False,
+            autotick=True, ticks='', showticklabels=False
+        ),
+        margin=go.Margin(l=0, r=0, b=0, t=0, pad=1),
+        legend=dict(orientation="h", font=dict(color=text_color))
     )
+
+    rows = []
+    for i1, i2 in links[::-1]:
+        d1, d2 = dataX[i1], dataX[i2]
+        x_axis = np.arange(len(d1))
+        trace1 = go.Scatter(x=x_axis, y=d1, line=dict(width=1),
+                            name=target_names[i1][:20])
+        trace2 = go.Scatter(x=x_axis, y=d2, line=dict(width=1),
+                            name=target_names[i2][:20])
+
+        chart = dcc.Graph(
+            id='links-chart_{}_{}'.format(i1, i2),
+            figure=go.Figure(data=[trace1, trace2], layout=layout),
+            config={'displayModeBar': False}
+        )
+        rows.append(html.Tr([html.Td(chart)]))
+
+    return html.Table(rows, className="table")
 
 
 if __name__ == '__main__':
