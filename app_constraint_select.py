@@ -95,7 +95,7 @@ app.layout = html.Div([
         html.Div([
             html.Div(id='dataset-info', children='Dataset Info'),
         ], className='col')
-    ], className='row'),
+    ], className='row h-50'),
 
     # showing images or scatter plot
     html.Div(id='img-container', children=[], className='row'),
@@ -108,12 +108,12 @@ app.layout = html.Div([
 
     # control buttons
     html.Div([
-        html.Button('Mustlink', id='btn-mustlink'),
-        html.Button('CannotLink', id='btn-cannotlink'),
-        html.Button('Next', id='btn-next'),
-        html.Button('Done', id='btn-done'),
-        html.Button('Reset', id='btn-reset'),
-    ], className='row mx-auto'),
+        html.Button('Mustlink', id='btn-mustlink', className="btn btn-outline-primary mx-auto"),
+        html.Button('CannotLink', id='btn-cannotlink', className="btn btn-outline-secondary mx-auto"),
+        html.Button('Next', id='btn-next', className="btn btn-outline-info mx-auto"),
+        html.Button('Done', id='btn-done', className="btn btn-outline-success mx-auto"),
+        html.Button('Reset', id='btn-reset', className="btn btn-outline-danger mx-auto"),
+    ], className='row h-25'),
 
     # list of selected constraints
     html.Div([
@@ -279,7 +279,7 @@ def select_ml(n_clicks):
     id1, id2 = current_pair['id1'], current_pair['id2']
     if id1 != -1 and id2 != -1:
         mustlinks.append([id1, id2])
-        return _gen_img_table(mustlinks)
+        return _gen_img_table(mustlinks, is_mustlink=True)
     else:
         return html.Table()
 
@@ -292,7 +292,7 @@ def select_cl(n_clicks):
     id1, id2 = current_pair['id1'], current_pair['id2']
     if id1 != -1 and id2 != -1:
         cannotlinks.append([id1, id2])
-        return _gen_img_table(cannotlinks)
+        return _gen_img_table(cannotlinks, is_mustlink=False)
     else:
         return html.Table()
 
@@ -327,14 +327,19 @@ def reset(n_clicks):
     return ''
 
 
-def _gen_img_table(links):
+def _gen_img_table(links, is_mustlink):
+    img_path = '{}/{}.svg'.format(static_host, dataset_name)
     tbl = html.Table(
         # Header
         [html.Tr([html.Th('Example 1'), html.Th('Example 2')])] +
         # Body
-        [html.Tr([html.Td(i1), html.Td(i2)]) for i1, i2 in links],
-
-        className="table"
+        [html.Tr([
+            html.Td(html.Img(src='{}#{}'.format(img_path, i1), height=32)), 
+            html.Td(html.Img(src='{}#{}'.format(img_path, i2), height=32)), 
+        ]) for i1, i2 in links],
+        # bootstrap css
+        style={'align': 'center', 'color':'#007bff' if is_mustlink else '#545b62'},
+        className="table table-sm"
     )
     return tbl
 
