@@ -13,7 +13,7 @@ def load_dataset(name='MNIST-SMALL'):
     print('Loading dataset: {}'.format(name))
     return {
         'COIL20': load_coil20,
-        'MNIST': partial(load_mnist_full, 6000),
+        'MNIST': partial(load_mnist_full, 2000),
         'MNIST-SMALL': load_mnist_mini,
         'WIKI-FR-1K': partial(load_wiki, 'fr'),
         'WIKI-EN-1K': partial(load_wiki, 'en'),

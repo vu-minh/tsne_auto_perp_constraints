@@ -8,7 +8,6 @@
     *{stroke-linecap:butt;stroke-linejoin:round;}
     .sprite { display: none;}
     .sprite:target { display: inline; }
-    
   </style>
  </defs>
 

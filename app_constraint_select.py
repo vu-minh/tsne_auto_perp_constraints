@@ -58,7 +58,7 @@ def _reset():
 datasets = {
     "MNIST mini": "MNIST-SMALL",
     "COIL-20": "COIL20",
-    "MNIST 2000 samples": "MNIST-2000",
+    "MNIST 2000 samples": "MNIST",
     "Country Indicators 1999": "COUNTRY-1999",
     "Country Indicators 2013": "COUNTRY-2013",
     "Country Indicators 2014": "COUNTRY-2014",
@@ -69,7 +69,7 @@ datasets = {
     "Multidimensional Poverty Measures": "MPI"
 }
 
-image_datasets = ['MNIST-SMALL', 'COIL20']
+image_datasets = ['MNIST-SMALL', 'MNIST', 'COIL20']
 
 is_showing_image = False
 
@@ -180,8 +180,8 @@ def show_pair_images(n_clicks):
 
     img_path = '{}/{}.svg'.format(img_host, dataset_name)
     res = [
-        html.Img(id='img-left', src='{}#{}'.format(img_path, i1)),
-        html.Img(id='img-right', src='{}#{}'.format(img_path, i2)),
+        html.Img(id='img-left', src='{}#{}'.format(img_path, i1), width=100),
+        html.Img(id='img-right', src='{}#{}'.format(img_path, i2), width=100),
     ]
     return res
 
