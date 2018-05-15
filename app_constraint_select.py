@@ -1,4 +1,3 @@
-import numpy as np
 import dash
 import dash_html_components as html
 import dash_core_components as dcc
@@ -7,7 +6,8 @@ from scipy.spatial.distance import cosine, pdist, squareform
 from dataset_utils import load_dataset
 
 import random
-
+import time
+import pickle
 
 epsilon = 1e-5
 
@@ -61,7 +61,6 @@ datasets = {
     "Country Indicators 2013": "COUNTRY-2013",
     "Country Indicators 2014": "COUNTRY-2014",
     "Country Indicators 2015": "COUNTRY-2015",
-    # "Cars and Trucks 2004": "CARS04",
     "Breast Cancer Wisconsin (Diagnostic)": "BREAST-CANCER95",
     "Pima Indians Diabetes": "DIABETES",
     "Multidimensional Poverty Measures": "MPI"
@@ -95,7 +94,7 @@ app.layout = html.Div([
         html.Div([
             html.Div(id='dataset-info', children='Dataset Info'),
         ], className='col')
-    ], className='row h-50'),
+    ], className='row'),
 
     # showing images or scatter plot
     html.Div(id='img-container', children=[], className='row'),
@@ -108,12 +107,17 @@ app.layout = html.Div([
 
     # control buttons
     html.Div([
-        html.Button('Mustlink', id='btn-mustlink', className="btn btn-outline-primary mx-auto"),
-        html.Button('CannotLink', id='btn-cannotlink', className="btn btn-outline-secondary mx-auto"),
-        html.Button('Next', id='btn-next', className="btn btn-outline-info mx-auto"),
-        html.Button('Done', id='btn-done', className="btn btn-outline-success mx-auto"),
-        html.Button('Reset', id='btn-reset', className="btn btn-outline-danger mx-auto"),
-    ], className='row h-25'),
+        html.Button('Mustlink', id='btn-mustlink',
+                    className="btn btn-outline-primary mx-auto"),
+        html.Button('CannotLink', id='btn-cannotlink',
+                    className="btn btn-outline-secondary mx-auto"),
+        html.Button('Next', id='btn-next',
+                    className="btn btn-outline-info mx-auto"),
+        html.Button('Done', id='btn-done',
+                    className="btn btn-outline-success mx-auto"),
+        html.Button('Reset', id='btn-reset',
+                    className="btn btn-outline-danger mx-auto"),
+    ], className='row'),
 
     # list of selected constraints
     html.Div([
@@ -160,23 +164,14 @@ def update_dataset(name):
 
     dataset_name = name
     dataX, target_labels, target_names = load_dataset(dataset_name)
-
     dists = squareform(pdist(dataX))
-    # dataset_info = """
-    #     dataX: shape={}, mean={:.3f}, std={:.3f},
-    #     min={:.3f}, max={:.3f},
-    #     min_dist={:.3f}, max_dist={:.3f}
-    # """.format(dataX.shape, np.mean(dataX), np.std(dataX),
-    #            np.min(dataX), np.max(dataX), np.min(dists), np.max(dists))
     return str(dataX.shape)
 
 
 def _rand_pair(n_max):
     i1 = random.randint(0, n_max - 1)
     i2 = random.randint(0, n_max - 1)
-    if i1 == i2:
-        return _rand_pair(n_max)
-    return (i1, i2)
+    return (i1, i2) if i1 != i2 else _rand_pair(n_max)
 
 
 @app.callback(dash.dependencies.Output('img-container', 'children'),
@@ -279,9 +274,13 @@ def select_ml(n_clicks):
     id1, id2 = current_pair['id1'], current_pair['id2']
     if id1 != -1 and id2 != -1:
         mustlinks.append([id1, id2])
-        return _gen_img_table(mustlinks, is_mustlink=True)
+
+    res = html.Table()
+    if is_showing_image:
+        res = _gen_img_table(mustlinks, is_mustlink=True)
     else:
-        return html.Table()
+        res = _gen_chart_table(mustlinks, is_mustlink=True)
+    return res
 
 
 @app.callback(
@@ -292,56 +291,71 @@ def select_cl(n_clicks):
     id1, id2 = current_pair['id1'], current_pair['id2']
     if id1 != -1 and id2 != -1:
         cannotlinks.append([id1, id2])
-        return _gen_img_table(cannotlinks, is_mustlink=False)
+
+    res = html.Table()
+    if is_showing_image:
+        res = _gen_img_table(cannotlinks, is_mustlink=False)
     else:
-        return html.Table()
+        res = _gen_chart_table(cannotlinks, is_mustlink=False)
+    return res
 
 
-# @app.callback(
-#     dash.dependencies.Output('support-info', 'children'),
-#     [dash.dependencies.Input('btn-done', 'n_clicks')])
-# def save_links(_):
-#     if not dataset_name:
-#         return
+@app.callback(
+    dash.dependencies.Output('btn-done', 'value'),
+    [dash.dependencies.Input('btn-done', 'n_clicks')])
+def save_links(_):
+    if not dataset_name:
+        return ''
 
-#     if mustlinks or cannotlinks:
-#         out_name = './output/manual_constraints/{}_{}.pkl'.format(
-#             dataset_name, time.strftime("%Y%m%d_%H%M%S"))
-#         data = {'mustlinks': mustlinks, 'cannotlinks': cannotlinks}
-#         pickle.dump(data, open(out_name, 'wb'))
-
-#         _reset()
-
-#         # Debug
-#         pkl_data = pickle.load(open(out_name, 'rb'))
-#         print(pkl_data)
-
-#         return "Write constraints to {}".format(out_name)
+    if mustlinks or cannotlinks:
+        out_name = './output/manual_constraints/{}_{}.pkl'.format(
+            dataset_name, time.strftime("%Y%m%d_%H%M%S"))
+        data = {'mustlinks': mustlinks, 'cannotlinks': cannotlinks}
+        pickle.dump(data, open(out_name, 'wb'))
+        _reset()
 
 
 @app.callback(
     dash.dependencies.Output('datasetX', 'value'),
     [dash.dependencies.Input('btn-reset', 'n_clicks')])
-def reset(n_clicks):
+def reset_dataset(_):
     _reset()
     return ''
 
 
 def _gen_img_table(links, is_mustlink):
+    if len(links) == 0:
+        return html.Table()
+
     img_path = '{}/{}.svg'.format(static_host, dataset_name)
-    tbl = html.Table(
+    return html.Table(
         # Header
         [html.Tr([html.Th('Example 1'), html.Th('Example 2')])] +
         # Body
         [html.Tr([
-            html.Td(html.Img(src='{}#{}'.format(img_path, i1), height=32)), 
-            html.Td(html.Img(src='{}#{}'.format(img_path, i2), height=32)), 
+            html.Td(html.Img(src='{}#{}'.format(img_path, i1), height=32)),
+            html.Td(html.Img(src='{}#{}'.format(img_path, i2), height=32)),
         ]) for i1, i2 in links],
         # bootstrap css
-        style={'align': 'center', 'color':'#007bff' if is_mustlink else '#545b62'},
+        style={'color': '#007bff' if is_mustlink else '#545b62'},
         className="table table-sm"
     )
-    return tbl
+
+
+def _gen_chart_table(links, is_mustlink):
+    if len(links) == 0:
+        return html.Table()
+
+    return html.Table(
+        [html.Tr([html.Th('Example 1'), html.Th(), html.Th('Example 2')])] +
+        [html.Tr([
+            html.Td(i1),
+            html.Td('chart'),
+            html.Td(i2),
+        ]) for i1, i2 in links],
+        style={'color': '#007bff' if is_mustlink else '#545b62'},
+        className="table"
+    )
 
 
 if __name__ == '__main__':
