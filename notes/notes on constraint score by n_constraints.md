@@ -13,11 +13,11 @@
 ### MPI
 ![](../plots/[MPI]S_all_nconstraints_more.png)
 
-### DIABETES
-![](../plots/[DIABETES]S_all_nconstraints_more.png)
-
 ### COUNTRY-2014
 ![](../plots/[COUNTRY-2014]S_all_nconstraints_more.png)
+
+### DIABETES
+![](../plots/[DIABETES]S_all_nconstraints_more.png)
 
 
 2. For `COUNTRY-2014` and `DIABETES`, the std err is too large.
