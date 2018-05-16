@@ -21,16 +21,7 @@
         perps = np.logspace(start, stop, n_perps, base=np.e)
         ```
 
-2. ### Meta-map
-    + For each dataset, all embedding results with different perplexities are used as features to generate a meta-map with t-sne.
-    + Meta params for generate meta-map: `meta_perps = [2, 5, 10, 20, 30, 35, 40, 45, 50, 75, 100, 150]`. Then we observe the result meta-maps and choose the appropriate value of `meta_perp`.
-    + Result for some datasets:
-    ![](../plots/[MNIST-SMALL]metamap.png)
-    ![](../plots/[COIL20]metamap.png)
-    ![](../plots/[COUNTRY-2014]metamap.png)
-    + To discuss: are the meta-maps useful for our method?, how do we use them?
-
-3. ### Experiments with different number of constraints
+1. ### Experiments with different number of constraints
     + Different number of auto-generated constraints are choosen:
     `num_constraints = [1, 2, 5, 10, 15, 20, 30, 40, 50, 75, 100, 200, 500]`
     + For each number of constraint, repeat the constraint generation process `10` times to create different pairs.
@@ -38,7 +29,7 @@
     ![](../plots/[MNIST-SMALL]S_all_nconstraints_more.png)
     + It is shown that, for some small number of constraints `(1, 2, 5)`, the error is too large. With larger number of constraints (`> 5`), we have a more stable avg value of $S_{M+C}$.
 
-4. ### Comparing the constraint scores and metric scores
+1. ### Comparing the constraint scores and metric scores
     + Plot the values of $S_{M+C}$ with its standard errors:
     ![](../plots/[ALL]constraint_scores.png)
     
@@ -48,3 +39,13 @@
         * For (all) datasets, $S_M$ is always close to $CC$.
         * For (all) datasets, $S_C$ is _always_ close to $CCA$ and $nMDS$.
         * Surprisingly, $S_{M+C}$ and $S_M$ only agree with the bounded metric $AUC_{log}RNX$ and $CC$ but never with the unbounded metric $CCA, nMDS$ and $NLM$. In contrast, $S_C$ tends to agree more with the unbounded metrics.
+
+
+1. ### Meta-map
+    + For each dataset, all embedding results with different perplexities are used as features to generate a meta-map with t-sne.
+    + Meta params for generate meta-map: `meta_perps = [2, 5, 10, 20, 30, 35, 40, 45, 50, 75, 100, 150]`. Then we observe the result meta-maps and choose the appropriate value of `meta_perp`.
+    + Result for some datasets:
+    ![](../plots/[MNIST-SMALL]metamap.png)
+    ![](../plots/[COIL20]metamap.png)
+    ![](../plots/[COUNTRY-2014]metamap.png)
+    + To discuss: are the meta-maps useful for our method?, how do we use them?        
