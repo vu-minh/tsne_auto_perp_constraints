@@ -4,3 +4,8 @@ db_utils.pyc
 output/
 .ipynb_checkpoints/
 plots/.ipynb_checkpoints/
+input/*.pickle
+input/*.csv
+input/*.mat
+input/*/
+notes/*.pdf
