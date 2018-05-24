@@ -32,6 +32,7 @@
         ![](../plots/[DIABETES]S_all_nconstraints_more.png)
     + It is shown that, for some small number of constraints `(1, 2, 5)`, the error is too large. With larger number of constraints (`> 5`), we have a more stable avg value of $S_{M+C}$ (but not in all cases).
 
+
 ||||
 | :- |:--:| -:|
 | ![](../plots/[DIABETES]S_all_nconst_gt5.png)| ![](../plots/[COUNTRY-2014]S_all_nconst_gt5.png) | ![](../plots/[MPI]S_all_nconst_gt5.png) |
