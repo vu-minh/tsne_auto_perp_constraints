@@ -73,7 +73,7 @@ is_showing_image = False
 
 # should start a separate static server for serving images:
 # python -m http.server
-static_host = 'http://0.0.0.0:8000'
+static_host = 'http://localhost:8000'
 
 app = dash.Dash()
 
@@ -227,11 +227,13 @@ def show_pair_in_radar(n_clicks):
     data1 = data1[selected_idx]
     data2 = data2[selected_idx]
 
+    theta = ['f{}'.format(i) for i in range(len(data1))]
     data1 = data1.tolist() + [data1[0]]
     data2 = data2.tolist() + [data2[0]]
-    theta = ['f{}'.format(i) for i in range(len(data1))]
+    theta += ['f0']
 
     max_val = max(max(data1), max(data2))
+    min_val = min(min(data1), min(data2))
 
     data = [
         go.Scatterpolar(
@@ -256,11 +258,11 @@ def show_pair_in_radar(n_clicks):
         polar=dict(
             radialaxis=dict(
                 visible=True,
-                range=[0.0, max_val]
+                range=[min_val, max_val]
             ),
             angularaxis=dict(
                 visible=True,
-                showticklabels=False,
+                showticklabels=True,
                 ticks=''
             )
         ),
@@ -366,7 +368,10 @@ def _gen_chart_table(links, is_mustlink):
         legend=dict(orientation="h", font=dict(color=text_color))
     )
 
-    rows = []
+    rows = [html.Tr([html.Td('#'),
+                     html.Td('Must-links' if is_mustlink else 'Cannnot-links')]
+                    )]
+    n_links = len(links)
     for i1, i2 in links[::-1]:
         d1, d2 = dataX[i1], dataX[i2]
         x_axis = np.arange(len(d1))
@@ -380,7 +385,8 @@ def _gen_chart_table(links, is_mustlink):
             figure=go.Figure(data=[trace1, trace2], layout=layout),
             config={'displayModeBar': False}
         )
-        rows.append(html.Tr([html.Td(chart)]))
+        rows.append(html.Tr([html.Td(n_links), html.Td(chart)]))
+        n_links -= 1
 
     return html.Table(rows, className="table")
 
