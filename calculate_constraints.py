@@ -118,7 +118,7 @@ def _calculate_constraint_score(db_name, labels, tsne_file):
             }
             records.append(a_record)
         # save to db the scores according to `n_take`
-        db_utils.append_to_db(db_name, key_name_in_DB, records=records)
+        db_utils.append_to_db(db_name, key=key_name_in_DB, records=records)
 
 
 def _calculate_manual_constraint(db_name, labels, tsne_file):
@@ -134,6 +134,7 @@ def _calculate_manual_constraint(db_name, labels, tsne_file):
 
     dataset_name = db_name[3:]
     n_constraints = 10
+    key_name_in_DB = 'manual_constraints'
     mls, cls = _load_manual_constraint(dataset_name, n_constraints)
     s_ml, s_cl = _constraint_score(Q, mls, cls)
     a_record = {
@@ -144,8 +145,7 @@ def _calculate_manual_constraint(db_name, labels, tsne_file):
         's_all': s_ml + s_cl,
         'reproduce_seed': -1
     }
-    db_utils.append_to_db(db_name, records=[a_record],
-                          key_name_in_DB='manual_constraints')
+    db_utils.append_to_db(db_name, key=key_name_in_DB, records=[a_record])
 
 
 def _load_manual_constraint(dataset_name, n_take=10):
@@ -159,12 +159,10 @@ def _load_manual_constraint(dataset_name, n_take=10):
 def calculate_constraint_score(dataset_name, auto_constraint=True):
     if auto_constraint:
         calculation_function = _calculate_constraint_score
+        _, labels, _ = load_dataset(dataset_name)
     else:
         calculation_function = _calculate_manual_constraint
-
-    # prepare database name and original labeled data
-    db_name = 'DB_{}'.format(dataset_name)
-    _, labels, _ = load_dataset(dataset_name)
+        labels = []
 
     # prepare a list of pre-calculated tsne object files
     to_process_files = []
@@ -176,6 +174,7 @@ def calculate_constraint_score(dataset_name, auto_constraint=True):
     print('{} files to process'.format(len(to_process_files)))
 
     # setup to run calculation in parallel
+    db_name = 'DB_{}'.format(dataset_name)
     Parallel(n_jobs=n_cpus_using)(
         delayed(calculation_function)(
             db_name, labels, tsne_file
