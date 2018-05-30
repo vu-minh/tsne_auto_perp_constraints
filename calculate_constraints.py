@@ -121,7 +121,47 @@ def _calculate_constraint_score(db_name, labels, tsne_file):
         db_utils.append_to_db(db_name, key_name_in_DB, records=records)
 
 
-def calculate_constraint_score(dataset_name):
+def _calculate_manual_constraint(db_name, labels, tsne_file):
+    print('Processing: ', tsne_file)
+
+    # extract fields from pre-calculated tsne object
+    tsne_obj = load(tsne_file)
+    X_2d = tsne_obj.embedding_
+    perp = tsne_obj.get_params()['perplexity']
+
+    # prepare matrix Q in low dim.
+    Q = _compute_Q(X_2d)
+
+    dataset_name = db_name[3:]
+    n_constraints = 10
+    mls, cls = _load_manual_constraint(dataset_name, n_constraints)
+    s_ml, s_cl = _constraint_score(Q, mls, cls)
+    a_record = {
+        'perp': perp,
+        'n_constraints': n_constraints,
+        's_ml': s_ml,
+        's_cl': s_cl,
+        's_all': s_ml + s_cl,
+        'reproduce_seed': -1
+    }
+    db_utils.append_to_db(db_name, records=[a_record],
+                          key_name_in_DB='manual_constraints')
+
+
+def _load_manual_constraint(dataset_name, n_take=10):
+    path = './output/manual_constraints/{}.pkl'.format(dataset_name)
+    pickle_obj = load(path)
+    mls = pickle_obj['mustlinks']
+    cls = pickle_obj['cannotlinks']
+    return mls[:n_take], cls[:n_take]
+
+
+def calculate_constraint_score(dataset_name, auto_constraint=True):
+    if auto_constraint:
+        calculation_function = _calculate_constraint_score
+    else:
+        calculation_function = _calculate_manual_constraint
+
     # prepare database name and original labeled data
     db_name = 'DB_{}'.format(dataset_name)
     _, labels, _ = load_dataset(dataset_name)
@@ -137,34 +177,23 @@ def calculate_constraint_score(dataset_name):
 
     # setup to run calculation in parallel
     Parallel(n_jobs=n_cpus_using)(
-        delayed(_calculate_constraint_score)(
+        delayed(calculation_function)(
             db_name, labels, tsne_file
         ) for tsne_file in to_process_files
     )
 
 
-def test_reproduce_seed():
-    # run this function several times and see if it gives the same results.
-    dataset_name = 'MNIST-SMALL'
-    _, labels, _ = load_dataset(dataset_name)
-
-    random.seed(999)
-    reproduce_seed = random.randint(0, 1e10)
-    print('seed', reproduce_seed)
-
-    mls, cls = _generate_constraints(labels, 3, reproduce_seed)
-    print(mls)
-    print(cls)
-
-
 if __name__ == '__main__':
     db_utils.IS_PARALLEL = True
 
-    datasets = ['BREAST-CANCER95', 'MPI', 'DIABETES']
-    for dataset_name in datasets:
-        print('Calculate Constraint scores for ', dataset_name)
-        calculate_constraint_score(dataset_name)
+    # datasets = ['BREAST-CANCER95', 'MPI', 'DIABETES']
+    # for dataset_name in datasets:
+    #     print('Calculate Constraint scores for ', dataset_name)
+    #     calculate_constraint_score(dataset_name)
 
-    # dataset_name = 'MNIST-SMALL'
-    # db_name = 'DB_{}'.format(dataset_name)
-    # db_utils.show_db(db_name, key='constraints')
+    dataset_name = 'COUNTRY-2014'
+    calculate_constraint_score(dataset_name='COUNTRY-2014',
+                               auto_constraint=False)
+
+    db_name = 'DB_{}'.format(dataset_name)
+    db_utils.show_db(db_name, key='manual_constraints')
