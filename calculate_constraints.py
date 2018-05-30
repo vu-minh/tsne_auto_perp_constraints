@@ -194,5 +194,5 @@ if __name__ == '__main__':
     calculate_constraint_score(dataset_name='COUNTRY-2014',
                                auto_constraint=False)
 
-    db_name = 'DB_{}'.format(dataset_name)
-    db_utils.show_db(db_name, key='manual_constraints')
+    # db_name = 'DB_{}'.format(dataset_name)
+    # db_utils.show_db(db_name, key='manual_constraints')
