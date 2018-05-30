@@ -121,6 +121,8 @@ app.layout = html.Div([
                     className="btn btn-outline-success mx-auto"),
         html.Button('Reset', id='btn-reset',
                     className="btn btn-outline-danger mx-auto"),
+        html.Button('Load constraints', id='btn-load-constraint',
+                    className="btn btn-outline-info mx-auto"),
     ], className='row  mt-3'),
 
     # list of selected constraints
@@ -389,6 +391,26 @@ def _gen_chart_table(links, is_mustlink):
         n_links -= 1
 
     return html.Table(rows, className="table")
+
+
+@app.callback(
+    dash.dependencies.Output('btn-load-constraint', 'children'),
+    [dash.dependencies.Input('btn-load-constraint', 'n_clicks')])
+def load_constraints(_):
+    global mustlinks
+    global cannotlinks
+
+    n_take = 10
+    path = './output/manual_constraints/{}.pkl'.format(dataset_name)
+    try:
+        pickle_obj = pickle.load(open(path, 'rb'))
+        print(pickle_obj)
+        mustlinks = pickle_obj['mustlinks'][:n_take]
+        cannotlinks = pickle_obj['cannotlinks'][:n_take]
+        return 'Load constraints [V]'
+    except Exception as e:
+        print('Do not have pre-defined constraints for ', dataset_name)
+        return 'Load constraints[X]'
 
 
 if __name__ == '__main__':
