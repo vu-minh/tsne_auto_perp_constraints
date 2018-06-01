@@ -190,9 +190,8 @@ if __name__ == '__main__':
     #     print('Calculate Constraint scores for ', dataset_name)
     #     calculate_constraint_score(dataset_name)
 
-    dataset_name = 'COUNTRY-2014'
-    calculate_constraint_score(dataset_name='COUNTRY-2014',
-                               auto_constraint=False)
+    dataset_name = 'MPI'
+    calculate_constraint_score(dataset_name, auto_constraint=False)
 
     # db_name = 'DB_{}'.format(dataset_name)
     # db_utils.show_db(db_name, key='manual_constraints')
