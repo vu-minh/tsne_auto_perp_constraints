@@ -2,6 +2,7 @@
 
 import os
 from joblib import Parallel, delayed, load
+import numpy as np
 
 from metrics import DRMetric
 from dataset_utils import load_dataset
@@ -13,7 +14,7 @@ n_cpus_using = int(0.75 * n_cpus)
 
 input_folder = './input'
 output_folder = './output'
-key_name_in_DB = 'metrics'
+key_name_in_DB = 'metrics2'
 
 
 def _calculate_metrics(db_name, X_original, tsne_file, metric_names):
@@ -24,6 +25,7 @@ def _calculate_metrics(db_name, X_original, tsne_file, metric_names):
     # extract fields from pre-calculated tsne object
     tsne_obj = load(tsne_file)
     X_2d = tsne_obj.embedding_
+    N = X_2d.reshape(-1, 2).shape[0]
     loss = tsne_obj.kl_divergence_
     n_iter = tsne_obj.n_iter_
     perp = tsne_obj.get_params()['perplexity']
@@ -32,7 +34,8 @@ def _calculate_metrics(db_name, X_original, tsne_file, metric_names):
     record = {
         'perp': perp,
         'loss': loss,
-        'n_iter': n_iter
+        'bic': 2 * loss + np.log(N) * perp / N,
+        'n_iter': n_iter + 1
     }
 
     # create a `DRMetric` object that calculates all metric score
@@ -86,14 +89,21 @@ if __name__ == '__main__':
     # if run code in sequential model, disable parallel flag
     db_utils.IS_PARALLEL = True
 
-    datasets = ['BREAST-CANCER95', 'MPI', 'DIABETES']
+    datasets = [
+        'MNIST-SMALL',
+        'COIL20',
+        'COUNTRY-2014',
+        'BREAST-CANCER95',
+        'MPI',
+        'DIABETES'
+    ]
     for dataset_name in datasets:
         print('Calculate Metric scores for ', dataset_name)
         calculate_metric(dataset_name)
 
-    # dataset_name = 'MNIST-SMALL'
+    # dataset_name = 'COUNTRY-2014'
     # db_name = 'DB_{}'.format(dataset_name)
-    # db_utils.show_db(db_name, key='metrics')
+    # db_utils.show_db(db_name, key='metrics2')
 
     # # clean all data in key
     # db_utils.reset_key(db_name, key='metrics')
