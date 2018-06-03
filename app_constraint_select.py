@@ -91,14 +91,16 @@ app.layout = html.Div([
                          for k, v in datasets.items()],
                 value=''
             ),
-        ], className='col'),
+        ], className='col-8'),
         html.Div([
             html.Div(id='dataset-info', children='Dataset Info'),
-        ], className='col')
+        ], className='col-4')
     ], className='row mt-3'),
 
     # showing images or scatter plot
-    html.Div(id='img-container', children=[], className='row mt-4'),
+    html.Div(id='img-container', children=[],
+             className='row mt-4',
+             style=dict(textAlign='center', height='250px')),
 
     html.Div(id='radar-container', children=[
         dcc.Graph(
@@ -107,7 +109,7 @@ app.layout = html.Div([
                 'displayModeBar': False
             }
         ),
-    ], className='row mt-4'),
+    ], className='row mt-4', style=dict(marginLeft='150px')),
 
     # control buttons
     html.Div([
@@ -121,8 +123,8 @@ app.layout = html.Div([
                     className="btn btn-outline-success mx-auto"),
         html.Button('Reset', id='btn-reset',
                     className="btn btn-outline-danger mx-auto"),
-        html.Button('Load constraints', id='btn-load-constraint',
-                    className="btn btn-outline-info mx-auto"),
+        # html.Button('Load constraints', id='btn-load-constraint',
+        #             className="btn btn-outline-info mx-auto"),
     ], className='row  mt-3'),
 
     # list of selected constraints
@@ -171,7 +173,7 @@ def update_dataset(name):
     dataset_name = name
     dataX, target_labels, target_names = load_dataset(dataset_name)
     dists = squareform(pdist(dataX))
-    return 'N = {} instances, D = {} features'.format(*dataX.shape)
+    return "N = {}, D = {}".format(*dataX.shape)
 
 
 def _rand_pair(n_max):
@@ -194,11 +196,11 @@ def show_pair_images(n_clicks):
     img_path = '{}/{}.svg'.format(static_host, dataset_name)
     return [
         html.Div([
-            html.Img(src='{}#{}'.format(img_path, i1), height=100),
-        ], className='col'),
+            html.Img(src='{}#{}'.format(img_path, i1), height=120),
+        ], className='col', style={'margin-top': 60}),
         html.Div([
-            html.Img(src='{}#{}'.format(img_path, i2), height=100),
-        ], className='col')
+            html.Img(src='{}#{}'.format(img_path, i2), height=120),
+        ], className='col', style={'margin-top': 60})
     ]
 
 
@@ -253,10 +255,14 @@ def show_pair_in_radar(n_clicks):
     ]
 
     layout = go.Layout(
-        title="""
-            {} distinguishable features <br>
-            Cosine similarity = {:.4f}, Distance = {:.4f}
-        """.format(len(data1) - 1, sim1, dists[i1, i2]),
+        autosize=False,
+        width=350,
+        height=250,
+        margin=go.Margin(l=-20, r=0, b=0, t=20,),
+        # title="""
+        #     {} distinguishable features <br>
+        #     Cosine similarity = {:.4f}, Distance = {:.4f}
+        # """.format(len(data1) - 1, sim1, dists[i1, i2]),
         polar=dict(
             radialaxis=dict(
                 visible=True,
@@ -269,7 +275,7 @@ def show_pair_in_radar(n_clicks):
             )
         ),
         showlegend=True,
-        legend=dict(orientation="h", xanchor="center", x=0.5)
+        legend=dict(orientation="h")
     )
 
     return {'data': data, 'layout': layout}
@@ -288,7 +294,7 @@ def select_ml(n_clicks):
     if is_showing_image:
         res = _gen_img_table(mustlinks, is_mustlink=True)
     else:
-        res = _gen_chart_table(mustlinks, is_mustlink=True)
+        res = _gen_text_table(mustlinks, is_mustlink=True)
     return res
 
 
@@ -305,7 +311,7 @@ def select_cl(n_clicks):
     if is_showing_image:
         res = _gen_img_table(cannotlinks, is_mustlink=False)
     else:
-        res = _gen_chart_table(cannotlinks, is_mustlink=False)
+        res = _gen_text_table(cannotlinks, is_mustlink=False)
     return res
 
 
@@ -338,15 +344,50 @@ def _gen_img_table(links, is_mustlink):
 
     img_path = '{}/{}.svg'.format(static_host, dataset_name)
     return html.Table(
+        # Caption on top
+        [html.Caption('List of {}'.format('Must-links' if is_mustlink else 'Cannot-links'),
+                      style={'caption-side': 'top'})] +
         # Header
-        [html.Tr([html.Th('Image 1'), html.Th('Image 2')])] +
+        [html.Tr([html.Th('#'), html.Th('Image 1'), html.Th('Image 2')])] +
         # Body
         [html.Tr([
+            html.Td(len(links) - i),
             html.Td(html.Img(src='{}#{}'.format(img_path, i1), height=32)),
             html.Td(html.Img(src='{}#{}'.format(img_path, i2), height=32)),
-        ]) for i1, i2 in links[::-1]],
+        ]) for i, [i1, i2] in enumerate(links[::-1])],
         # bootstrap css
-        style={'color': '#007bff' if is_mustlink else '#545b62'},
+        style={
+            'color': '#007bff' if is_mustlink else '#545b62',
+            'vertical-align': 'middle',
+            'text-align': 'center'
+        },
+        className="table table-sm"
+    )
+
+
+def _gen_text_table(links, is_mustlink):
+    if len(links) == 0:
+        return html.Table()
+
+    return html.Table(
+        # Caption on top
+        [html.Caption('List of {}'.format('Must-links' if is_mustlink else 'Cannot-links'),
+                      style={'caption-side': 'top'})] +
+        # Header
+        [html.Tr([html.Th('#'),
+                  html.Th('Instance 1'), html.Th('Instance 2')])] +
+        # Body
+        [html.Tr([
+            html.Td(len(links) - i),
+            html.Td(target_names[i1][:60]),
+            html.Td(target_names[i2][:60]),
+        ]) for i, [i1, i2] in enumerate(links[::-1])],
+        # bootstrap css
+        style={
+            'color': '#007bff' if is_mustlink else '#545b62',
+            'vertical-align': 'middle',
+            'text-align': 'center'
+        },
         className="table table-sm"
     )
 
@@ -393,24 +434,24 @@ def _gen_chart_table(links, is_mustlink):
     return html.Table(rows, className="table")
 
 
-@app.callback(
-    dash.dependencies.Output('btn-load-constraint', 'children'),
-    [dash.dependencies.Input('btn-load-constraint', 'n_clicks')])
-def load_constraints(_):
-    global mustlinks
-    global cannotlinks
+# @app.callback(
+#     dash.dependencies.Output('btn-load-constraint', 'children'),
+#     [dash.dependencies.Input('btn-load-constraint', 'n_clicks')])
+# def load_constraints(_):
+#     global mustlinks
+#     global cannotlinks
 
-    n_take = 10
-    path = './output/manual_constraints/{}.pkl'.format(dataset_name)
-    try:
-        pickle_obj = pickle.load(open(path, 'rb'))
-        print(pickle_obj)
-        mustlinks = pickle_obj['mustlinks'][:n_take]
-        cannotlinks = pickle_obj['cannotlinks'][:n_take]
-        return 'Load constraints [V]'
-    except Exception as e:
-        print('Do not have pre-defined constraints for ', dataset_name)
-        return 'Load constraints[X]'
+#     n_take = 10
+#     path = './output/manual_constraints/{}.pkl'.format(dataset_name)
+#     try:
+#         pickle_obj = pickle.load(open(path, 'rb'))
+#         print(pickle_obj)
+#         mustlinks = pickle_obj['mustlinks'][:n_take]
+#         cannotlinks = pickle_obj['cannotlinks'][:n_take]
+#         return 'Load constraints [V]'
+#     except Exception as e:
+#         print('Do not have pre-defined constraints for ', dataset_name)
+#         return 'Load constraints[X]'
 
 
 if __name__ == '__main__':
