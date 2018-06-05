@@ -109,7 +109,7 @@ app.layout = html.Div([
                 'displayModeBar': False
             }
         ),
-    ], className='row mt-4', style=dict(marginLeft='150px')),
+    ], className='row mt-4', style=dict(marginLeft='60px')),
 
     # control buttons
     html.Div([
