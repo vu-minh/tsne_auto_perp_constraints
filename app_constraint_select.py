@@ -57,7 +57,7 @@ def _reset():
 datasets = {
     "MNIST mini": "MNIST-SMALL",
     "COIL-20": "COIL20",
-    "MNIST 2000 samples": "MNIST",
+    "MNIST": "MNIST",
     "Country Indicators 1999": "COUNTRY-1999",
     "Country Indicators 2013": "COUNTRY-2013",
     "Country Indicators 2014": "COUNTRY-2014",
@@ -113,9 +113,9 @@ app.layout = html.Div([
 
     # control buttons
     html.Div([
-        html.Button('Mustlink', id='btn-mustlink',
+        html.Button('Must-link', id='btn-mustlink',
                     className="btn btn-outline-primary mx-auto"),
-        html.Button('CannotLink', id='btn-cannotlink',
+        html.Button('Cannot-link', id='btn-cannotlink',
                     className="btn btn-outline-secondary mx-auto"),
         html.Button('Next', id='btn-next',
                     className="btn btn-outline-info mx-auto"),
@@ -346,7 +346,7 @@ def _gen_img_table(links, is_mustlink):
     return html.Table(
         # Caption on top
         [html.Caption('List of {}'.format('Must-links' if is_mustlink else 'Cannot-links'),
-                      style={'caption-side': 'top'})] +
+                      style={'caption-side': 'top', 'text-align': 'center', 'color': 'black'})] +
         # Header
         [html.Tr([html.Th('#'), html.Th('Image 1'), html.Th('Image 2')])] +
         # Body
@@ -372,7 +372,7 @@ def _gen_text_table(links, is_mustlink):
     return html.Table(
         # Caption on top
         [html.Caption('List of {}'.format('Must-links' if is_mustlink else 'Cannot-links'),
-                      style={'caption-side': 'top'})] +
+                      style={'caption-side': 'top', 'text-align': 'center', 'color': 'black'})] +
         # Header
         [html.Tr([html.Th('#'),
                   html.Th('Instance 1'), html.Th('Instance 2')])] +
